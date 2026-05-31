@@ -3,6 +3,8 @@
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\NotesController;
+use App\Http\Controllers\QuizController;
 use App\Http\Middleware\CheckLogin;
 
 Route::get('/', function () {
@@ -17,5 +19,13 @@ Route::controller(AuthController::class)->group(function(){
 
 Route::controller(DashboardController::class)->group(function(){
     Route::get('/dashboard','index')->name('dashboard');
-    Route::get('/notes','notes')->name('notes');
+})->middleware('auth');
+
+Route::controller(NotesController::class)->group(function(){
+    Route::get('/notes','index')->name('notes');
+})->middleware('auth');
+
+Route::controller(QuizController::class)->group(function(){
+    Route::get('/quiz','index')->name('quiz');
+    Route::get('/show-quiz','show')->name('showQuiz');
 })->middleware('auth');

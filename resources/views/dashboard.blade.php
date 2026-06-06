@@ -5,7 +5,7 @@
     Welcome Back {{ session('username') }}!
 </h2>
 
-<p class="text-slae-500 mb-6 dark:text-white">
+<p class="text-slate-500 mb-6 dark:text-slate-300">
     Ready to Learning Today?
 </p>
 <div class="grid md:grid-cols-3 gap-6">

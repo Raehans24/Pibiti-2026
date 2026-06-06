@@ -21,14 +21,13 @@
         @stack('styles')
         @stack('scripts')
     </head>
-    <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-black transition-colors duration-300">
+    <body class="bg-gray-100 dark:bg-gray-900 text-slate-900 dark:text-slate-100 transition-colors duration-300">
         <div class="flex min-h-screen">
             <aside class="hidden md:block w-64 bg-slate-500 dark:bg-gray-800 text-white p-6 transition-colors duration-300" id="aside">
                 <div class="text-xl font-bold mb-6">
                     <h1>Smart Notes Ai</h1>
                 </div>
                 <nav>
-                    <a href="/" class="block py-2 px-3 rounded-lg hover:bg-slate-400 dark:hover:bg-gray-700 transition-colors duration-200">Home</a>
                     <a href="{{ route('dashboard') }}" class="block py-2 px-3 rounded-lg hover:bg-slate-400 dark:hover:bg-gray-700 transition-colors duration-200">Dashboard</a>
                     <a href="{{ route('notes') }}" class="block py-2 px-3 rounded-lg hover:bg-slate-400 dark:hover:bg-gray-700 transition-colors duration-200">Notes</a>
                     <a href="{{ route('quiz') }}" class="block py-2 px-3 rounded-lg hover:bg-slate-400 dark:hover:bg-gray-700 transition-colors duration-200">Quiz</a>
@@ -72,5 +71,8 @@
                 </div>
             </main>
         </div>
+
+        @include('loading.Loading')
+        @include('loading.Loading-ai')
     </body>
 </html>

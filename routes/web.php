@@ -11,12 +11,14 @@ use Illuminate\Support\Facades\Route;
 use function Laravel\Ai\agent;
 
 Route::get('/', function () {
-    return view('dashboard');
+    return redirect()->route('dashboard');
 });
 
 Route::controller(AuthController::class)->group(function () {
-    Route::get('/login', 'showlogin')->name('login');
+    Route::get('/login', 'showLogin')->name('login');
     Route::post('/login', 'login');
+    Route::get('/register', 'showRegister')->name('register');
+    Route::post('/register', 'register');
     Route::post('/logout', 'logout')->name('logout');
 });
 

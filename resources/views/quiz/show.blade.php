@@ -18,7 +18,8 @@
 
     @php
         // Handle array or object structure depending on Laravel AI parsing
-        $questions = is_array($quiz) ? ($quiz['question'] ?? []) : ($quiz->question ?? []);
+        $quizData = $quiz ? $quiz->data : [];
+        $questions = is_array($quizData) ? ($quizData['question'] ?? []) : ($quizData->question ?? []);
     @endphp
 
     @if(empty($questions))

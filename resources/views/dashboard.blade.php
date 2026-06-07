@@ -2,7 +2,7 @@
 @section('content')
 <div class="space-y">
 <h2 class="text-2xl font-bold text-red-400">
-    Welcome Back {{ session('username') }}!
+    Welcome Back {{ auth()->user()->name }}!
 </h2>
 
 <p class="text-slate-500 mb-6 dark:text-slate-300">
@@ -14,23 +14,23 @@
         Total Catatan
     </p>
     <h3 class="flex text-3xl font-bold mt-2">
-        12
+        {{ $totalNotes }}
     </h3>
 </x-card>
 <x-card>
     <p>
-        Total Catatan
+        Total Quiz
     </p>
     <h3 class="text-3xl font-bold mt-2">
-        12
+        {{ $totalQuizzes }}
     </h3>
 </x-card>
 <x-card>
     <p>
-        Total Catatan
+        Quiz Selesai
     </p>
     <h3 class="text-3xl font-bold mt-2">
-        12
+        {{ $totalScores }}
     </h3>
 </x-card>
 <x-card>

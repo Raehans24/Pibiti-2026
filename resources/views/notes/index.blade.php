@@ -46,24 +46,24 @@
             @forelse ($notes as $note)
             <x-card>
                 <h4 class="text-lg font-semibold dark:text-white">
-                    {{ $note['title'] }}
+                    {{ $note->title }}
                 </h4>
                 <p class="text-slate-500 mt-1 dark:text-slate-300">
-                    {{ $note['content'] }}
+                    {{ $note->content }}
                 </p>
                 <div class="flex flex-wrap gap-2 mt-4">
-                    <form action="{{ route('notes.summary', $note['id']) }}" method="POST" class="inline">
+                    <form action="{{ route('notes.summary', $note->id) }}" method="POST" class="inline">
                         @csrf
                         <x-button type="submit">
                             Simpulkan menggunakan Ai
                         </x-button>
                     </form>
-                    <a href="{{ route('notes.show', $note['id']) }}">
+                    <a href="{{ route('notes.show', $note->id) }}">
                         <x-button class="bg-emerald-500 hover:bg-emerald-600">
                             Detail
                         </x-button>
                     </a>
-                    <form action="{{ route('notes.destroy', $note['id']) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus catatan ini?')">
+                    <form action="{{ route('notes.destroy', $note->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus catatan ini?')">
                         @csrf
                         @method('DELETE')
                         <x-button type="submit" class="bg-red-500 hover:bg-red-600">

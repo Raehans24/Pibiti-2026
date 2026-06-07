@@ -2,7 +2,7 @@
 @section('content')
 <div class="space-y">
 <h2 class="text-2xl font-bold text-red-400">
-    Welcome Back {{ session('username') }}!
+    Welcome Back {{ auth()->user()->name }}!
 </h2>
 
 <p class="text-slate-500 mb-6 dark:text-slate-350">
@@ -12,18 +12,18 @@
     @forelse($notes as $note)
     <x-card>
         <h3 class="font-bold">
-            {{ $note['title'] }}
+            {{ $note->title }}
         </h3>
         <p class="text-slate-500 mt-2">
-            {{ count($note['quizzes']) }} Quiz Terbuat
+            {{ $note->quizzes->count() }} Quiz Terbuat
         </p>
         <div class="flex gap-2 mt-4">
-            <a href="{{ route('quiz.show', $note['id']) }}">
+            <a href="{{ route('quiz.show', $note->id) }}">
                 <x-button>
                     Masuk ke Quiz
                 </x-button>
             </a>
-            <form action="{{ route('quiz.destroy', $note['id']) }}" method="POST" onsubmit="return confirm('Apakah kamu yakin ingin menghapus kuis untuk catatan ini?');">
+            <form action="{{ route('quiz.destroy', $note->id) }}" method="POST" onsubmit="return confirm('Apakah kamu yakin ingin menghapus kuis untuk catatan ini?');">
                 @csrf
                 @method('DELETE')
                 <x-button type="submit" class="bg-red-500 hover:bg-red-600">

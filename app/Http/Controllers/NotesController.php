@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Ai\Agents\SummaryAgent;
+use App\Models\Note;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -19,8 +22,9 @@ class NotesController extends Controller
      */
     public function index(): View
     {
-        /** @var array<int, array{id: int, title: ?string, content: ?string, summary: ?string, quizzes: array}> $notes */
-        $notes = session('notes', []);
+        /** @var User $user */
+        $user = Auth::user();
+        $notes = $user->notes()->latest()->get();
 
         return view('notes.index', [
             'notes' => $notes,
@@ -28,24 +32,16 @@ class NotesController extends Controller
     }
 
     /**
-     * Store a newly created note in session.
+     * Store a newly created note in database.
      */
     public function store(Request $request): RedirectResponse
     {
-        /** @var array<int, array{id: int, title: ?string, content: ?string, summary: ?string, quizzes: array}> $notes */
-        $notes = session('notes', []);
-        $maxId = (int) (collect($notes)->max('id') ?? 0);
+        /** @var User $user */
+        $user = Auth::user();
 
-        $notes[] = [
-            'id' => $maxId + 1,
+        $user->notes()->create([
             'title' => $request->input('title'),
             'content' => $request->input('content'),
-            'summary' => null,
-            'quizzes' => [],
-        ];
-
-        session([
-            'notes' => $notes,
         ]);
 
         return redirect()->route('notes');
@@ -56,13 +52,9 @@ class NotesController extends Controller
      */
     public function show(string|int $id): View
     {
-        /** @var array<int, array{id: int, title: ?string, content: ?string, summary: ?string, quizzes: array}> $notes */
-        $notes = session('notes', []);
-        $note = collect($notes)->firstWhere('id', (int) $id);
-
-        if (! $note) {
-            abort(404);
-        }
+        /** @var User $user */
+        $user = Auth::user();
+        $note = $user->notes()->findOrFail($id);
 
         return view('notes.show', [
             'note' => $note,
@@ -74,19 +66,19 @@ class NotesController extends Controller
      */
     public function file(string|int $id): Response
     {
-        /** @var array<int, array{id: int, title: ?string, content: ?string, summary: ?string, quizzes: array, file_path?: string}> $notes */
-        $notes = session('notes', []);
-        $note = collect($notes)->firstWhere('id', (int) $id);
+        /** @var User $user */
+        $user = Auth::user();
+        $note = $user->notes()->findOrFail($id);
 
-        if (! $note || empty($note['file_path'])) {
+        if (empty($note->file_path)) {
             abort(404);
         }
 
-        if (! Storage::exists($note['file_path'])) {
+        if (! Storage::exists($note->file_path)) {
             abort(404);
         }
 
-        return Storage::response($note['file_path']);
+        return Storage::response($note->file_path);
     }
 
     /**
@@ -94,66 +86,48 @@ class NotesController extends Controller
      */
     public function summary(string|int $id): RedirectResponse
     {
-        /** @var array<int, array{id: int, title: ?string, content: ?string, summary: ?string, quizzes: array, file_path?: string}> $notes */
-        $notes = session('notes', []);
-        $note = collect($notes)->firstWhere('id', (int) $id);
-
-        if (! $note) {
-            abort(404);
-        }
+        /** @var User $user */
+        $user = Auth::user();
+        $note = $user->notes()->findOrFail($id);
 
         $attachments = [];
-        if (! empty($note['file_path'])) {
-            $attachments[] = Document::fromStorage($note['file_path']);
+        if (! empty($note->file_path)) {
+            $attachments[] = Document::fromStorage($note->file_path);
         }
 
-        $prompt = ! empty($note['file_path'])
+        $prompt = ! empty($note->file_path)
             ? 'Buatlah ringkasan materi dari dokumen terlampir.'
-            : $note['content'];
+            : $note->content;
 
         $summary = SummaryAgent::make()->prompt($prompt, $attachments);
 
-        $notes = collect($notes)->map(function (array $item) use ($id, $summary) {
-            if ($item['id'] === (int) $id) {
-                $item['summary'] = Str::markdown((string) $summary);
-            }
-
-            return $item;
-        })->all();
-
-        session([
-            'notes' => $notes,
+        $note->update([
+            'summary' => Str::markdown((string) $summary),
         ]);
 
         return redirect()->route('notes.show', $id);
     }
 
     /**
-     * Remove the specified note from session.
+     * Remove the specified note from database.
      */
     public function destroy(string|int $id): RedirectResponse
     {
-        /** @var array<int, array{id: int, title: ?string, content: ?string, summary: ?string, quizzes: array, file_path?: string}> $notes */
-        $notes = session('notes', []);
+        /** @var User $user */
+        $user = Auth::user();
+        $note = $user->notes()->findOrFail($id);
 
-        $note = collect($notes)->firstWhere('id', (int) $id);
-        if ($note && ! empty($note['file_path'])) {
-            Storage::delete($note['file_path']);
+        if (! empty($note->file_path)) {
+            Storage::delete($note->file_path);
         }
 
-        $notes = collect($notes)->reject(function (array $item) use ($id) {
-            return $item['id'] === (int) $id;
-        })->values()->all();
-
-        session([
-            'notes' => $notes,
-        ]);
+        $note->delete();
 
         return redirect()->route('notes');
     }
 
     /**
-     * Update the specified note in session.
+     * Update the specified note in database.
      */
     public function update(Request $request, string|int $id): RedirectResponse
     {
@@ -162,26 +136,13 @@ class NotesController extends Controller
             'content' => ['nullable', 'string'],
         ]);
 
-        /** @var array<int, array{id: int, title: ?string, content: ?string, summary: ?string, quizzes: array, file_path?: string}> $notes */
-        $notes = session('notes', []);
-        $noteExists = false;
+        /** @var User $user */
+        $user = Auth::user();
+        $note = $user->notes()->findOrFail($id);
 
-        $notes = collect($notes)->map(function (array $item) use ($id, $request, &$noteExists) {
-            if ($item['id'] === (int) $id) {
-                $item['title'] = $request->input('title');
-                $item['content'] = $request->input('content');
-                $noteExists = true;
-            }
-
-            return $item;
-        })->all();
-
-        if (! $noteExists) {
-            abort(404);
-        }
-
-        session([
-            'notes' => $notes,
+        $note->update([
+            'title' => $request->input('title'),
+            'content' => $request->input('content'),
         ]);
 
         return redirect()->route('notes.show', $id);
@@ -196,6 +157,9 @@ class NotesController extends Controller
             'file' => ['required', 'file', 'mimes:txt,md,pdf', 'max:102400'],
         ]);
 
+        /** @var User $user */
+        $user = Auth::user();
+
         $file = $request->file('file');
         $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $extension = strtolower($file->getClientOriginalExtension());
@@ -209,23 +173,13 @@ class NotesController extends Controller
         if (empty(trim($content)) && $extension !== 'pdf') {
             return redirect()->route('notes')->with('error', 'Tidak dapat mengekstrak teks dari file yang diupload.');
         }
+
         $path = $file->storeAs('private', $originalName.'.'.$extension);
 
-        /** @var array<int, array{id: int, title: ?string, content: ?string, summary: ?string, quizzes: array, file_path?: string}> $notes */
-        $notes = session('notes', []);
-        $maxId = (int) (collect($notes)->max('id') ?? 0);
-
-        $notes[] = [
-            'id' => $maxId + 1,
+        $user->notes()->create([
             'title' => $originalName,
             'content' => $content,
             'file_path' => $path,
-            'summary' => null,
-            'quizzes' => [],
-        ];
-
-        session([
-            'notes' => $notes,
         ]);
 
         return redirect()->route('notes');

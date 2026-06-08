@@ -42,9 +42,12 @@ class QuizController extends Controller
             $note->summary ?: $note->content
         );
 
+        $data = is_string($quizData) ? json_decode($quizData, true) : 
+                ($quizData instanceof \Illuminate\Contracts\Support\Arrayable ? $quizData->toArray() : (array) $quizData);
+
         $user->quizzes()->create([
             'note_id' => $note->id,
-            'data' => is_string($quizData) ? json_decode($quizData, true) : (array) $quizData,
+            'data' => $data,
         ]);
 
         return redirect('/quiz/'.$id);

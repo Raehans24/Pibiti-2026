@@ -21,27 +21,12 @@ class QuizAgent implements Agent, Conversational, HasStructuredOutput, HasTools
      */
     public function instructions(): Stringable|string
     {
-        return "Kamu Adalah pembuat soal pembelajaran.
-                Buat 5 soal pilihan ganda berdasarkan materi yang diberikan
-                Setiap soal harus menggunakan field : 
-                -question 
-                -option_a
-                -option_b
-                -option_c
-                -option_d
+        return "Kamu adalah pembuat soal pembelajaran.
+                Buat 5 soal pilihan ganda berdasarkan materi yang diberikan.
+                Kembalikan response dalam format JSON yang valid dan sesuai dengan schema yang diminta.
                 
-                Untuk field answer/jawaban.
-                Wajib berisi salah satu dari : 
-                A
-                B
-                C
-                D
-                
-                Jangan pernah mengembalikan : 
-                -option_a
-                -option_b
-                -option_c
-                -option_d";
+                Untuk field answer/jawaban, wajib berisi karakter alphabet saja, yaitu salah satu dari: A, B, C, atau D.
+                Jangan pernah mengisi field answer dengan teks panjang atau nama field seperti 'option_a'.";
     }
 
     /**
@@ -81,7 +66,7 @@ class QuizAgent implements Agent, Conversational, HasStructuredOutput, HasTools
                         'answer' => $schema->string()->enum(['A','B','C','D'])->required(),
                     ]
                 )
-            )
+            )->required()
         ];
     }
 }

@@ -4,11 +4,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotesController;
 use App\Http\Controllers\QuizController;
-use Illuminate\Http\Request;
-use Illuminate\Mail\Markdown;
+use App\Http\Controllers\WorldController;
 use Illuminate\Support\Facades\Route;
-
-use function Laravel\Ai\agent;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -20,6 +17,10 @@ Route::controller(AuthController::class)->group(function () {
     Route::get('/register', 'showRegister')->name('register');
     Route::post('/register', 'register');
     Route::post('/logout', 'logout')->name('logout');
+
+    // Google OAuth
+    Route::get('/auth/google', 'redirectToGoogle')->name('auth.google');
+    Route::get('/auth/google/callback', 'handleGoogleCallback')->name('auth.google.callback');
 });
 
 Route::middleware('auth')->group(function () {
@@ -45,25 +46,13 @@ Route::middleware('auth')->group(function () {
         Route::delete('/quiz/{id}', 'destroy')->name('quiz.destroy');
         Route::get('/notes/{id}/quiz', 'generate')->name('quiz.generate');
     });
+
+    // World Prediction Globe
+    Route::controller(WorldController::class)->group(function () {
+        Route::get('/world', 'index')->name('world');
+        Route::get('/api/world/weather', 'weather')->name('world.weather');
+        Route::get('/api/world/wind', 'wind')->name('world.wind');
+        Route::get('/api/world/commodities', 'commodities')->name('world.commodities');
+        Route::get('/api/world/events', 'events')->name('world.events');
+    });
 });
-
-// Route::get('/playground-ai',function(Request $request){
-//     $prompt = $request->input('prompt');
-
-//     if(empty($prompt)){
-//         return view('playground-ai');
-//     }
-
-//     $response = agent(
-//         instructions: 'Kamu adalah seorang mentor laravel yang membantu saya belajar pemrograman
-//         Berikan jawaban yang singkat, jelas, dan mudah dipahami'
-//     )->prompt($prompt);
-
-//     // // $answer = Markdown::parse($response);
-
-//     // // return $answer;
-//     // dd ($response);
-//     if(isset($prompt)){
-//         return view('playground-ai');
-//     }
-// });

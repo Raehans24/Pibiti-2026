@@ -31,6 +31,7 @@
                     <a href="{{ route('dashboard') }}" class="block py-2 px-3 rounded-lg hover:bg-slate-400 dark:hover:bg-gray-700 transition-colors duration-200">Dashboard</a>
                     <a href="{{ route('notes') }}" class="block py-2 px-3 rounded-lg hover:bg-slate-400 dark:hover:bg-gray-700 transition-colors duration-200">Notes</a>
                     <a href="{{ route('quiz') }}" class="block py-2 px-3 rounded-lg hover:bg-slate-400 dark:hover:bg-gray-700 transition-colors duration-200">Quiz</a>
+                    <a href="{{ route('world') }}" class="block py-2 px-3 rounded-lg hover:bg-slate-400 dark:hover:bg-gray-700 transition-colors duration-200">🌍 World Prediction</a>
                 </nav>
             </aside>
             <!-- Flex = 1 bukan L/l -->

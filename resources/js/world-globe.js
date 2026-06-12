@@ -10,6 +10,9 @@
  */
 
 import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
 // ── Constants ────────────────────────────────────────────────
 const BASE_URL     = window.location.origin;
@@ -46,63 +49,106 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setClearColor(0x000000, 0);
 
 // ── Lighting ─────────────────────────────────────────────────
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); // Lowered for more contrast
 scene.add(ambientLight);
 
-const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
+const sunLight = new THREE.DirectionalLight(0xffffff, 1.8);
 sunLight.position.set(5, 3, 5);
 scene.add(sunLight);
 
-const rimLight = new THREE.DirectionalLight(0x3b82f6, 0.3);
+const rimLight = new THREE.DirectionalLight(0x3b82f6, 0.6);
 rimLight.position.set(-5, -3, -5);
 scene.add(rimLight);
+
+// ── Post-Processing (Bloom) ──────────────────────────────────
+const renderScene = new RenderPass(scene, camera);
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(container.clientWidth, container.clientHeight), 1.5, 0.4, 0.85);
+bloomPass.threshold = 0.15;
+bloomPass.strength = 0.4;
+bloomPass.radius = 0.5;
+
+const composer = new EffectComposer(renderer);
+composer.addPass(renderScene);
+composer.addPass(bloomPass);
+
+// Handle resize for composer
+window.addEventListener('resize', () => {
+    composer.setSize(container.clientWidth, container.clientHeight);
+});
 
 // ── Globe ────────────────────────────────────────────────────
 const textureLoader = new THREE.TextureLoader();
 
-const [earthTexture, earthNormal, earthSpecular] = [
+const [earthTexture, earthNormal, earthSpecular, earthDisplacement, cloudTexture] = [
     'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg',
     'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_normal_2048.jpg',
     'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_specular_2048.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_normal_2048.jpg', // Using normal as bump/displacement for extra relief
+    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_clouds_1024.png',
 ].map(url => textureLoader.load(url, undefined, undefined, () => {}));
 
 const globeMaterial = new THREE.MeshPhongMaterial({
     map: earthTexture,
     normalMap: earthNormal,
+    normalScale: new THREE.Vector2(0.85, 0.85),
     specularMap: earthSpecular,
     specular: new THREE.Color(0x333333),
-    shininess: 15,
+    shininess: 25,
+    displacementMap: earthDisplacement,
+    displacementScale: 0.015,
 });
 
-const globe = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64), globeMaterial);
+const globe = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS, 128, 128), globeMaterial);
 scene.add(globe);
 
-// ── Atmosphere layers ────────────────────────────────────────
+// ── Atmosphere & Clouds ──────────────────────────────────────
+const cloudsMaterial = new THREE.MeshLambertMaterial({
+    map: cloudTexture,
+    transparent: true,
+    opacity: 0.6,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide
+});
+const clouds = new THREE.Mesh(new THREE.SphereGeometry(GLOBE_RADIUS * 1.006, 128, 128), cloudsMaterial);
+scene.add(clouds);
+
 const atmosphere = new THREE.Mesh(
-    new THREE.SphereGeometry(GLOBE_RADIUS * 1.02, 64, 64),
-    new THREE.MeshPhongMaterial({ color: 0x0066ff, transparent: true, opacity: 0.07, side: THREE.FrontSide }),
+    new THREE.SphereGeometry(GLOBE_RADIUS * 1.025, 64, 64),
+    new THREE.MeshPhongMaterial({ color: 0x0066ff, transparent: true, opacity: 0.08, side: THREE.FrontSide, blending: THREE.AdditiveBlending }),
 );
 scene.add(atmosphere);
 
 const glowMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(GLOBE_RADIUS * 1.08, 64, 64),
-    new THREE.MeshPhongMaterial({ color: 0x1a56db, transparent: true, opacity: 0.04, side: THREE.BackSide }),
+    new THREE.SphereGeometry(GLOBE_RADIUS * 1.09, 64, 64),
+    new THREE.MeshPhongMaterial({ color: 0x1a56db, transparent: true, opacity: 0.05, side: THREE.BackSide }),
 );
 scene.add(glowMesh);
 
 // ── Stars ────────────────────────────────────────────────────
-const starPositions = new Float32Array(3000 * 3).map(() => (Math.random() - 0.5) * 200);
+const starPositions = new Float32Array(4000 * 3).map(() => (Math.random() - 0.5) * 200);
 const starsGeo = new THREE.BufferGeometry();
 starsGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-scene.add(new THREE.Points(starsGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.2, sizeAttenuation: true })));
+scene.add(new THREE.Points(starsGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, sizeAttenuation: true, transparent: true, opacity: 0.8 })));
 
-// ── Click marker ─────────────────────────────────────────────
-const clickMarker = new THREE.Mesh(
-    new THREE.SphereGeometry(0.015, 8, 8),
-    new THREE.MeshBasicMaterial({ color: 0xef4444 }),
+// ── Click marker (Pulsing Ring) ──────────────────────────────
+const clickMarker = new THREE.Group();
+const innerDot = new THREE.Mesh(
+    new THREE.SphereGeometry(0.005, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xffffff })
 );
+const pulseRing = new THREE.Mesh(
+    new THREE.RingGeometry(0.006, 0.015, 32),
+    new THREE.MeshBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.8, side: THREE.DoubleSide })
+);
+clickMarker.add(innerDot);
+clickMarker.add(pulseRing);
 clickMarker.visible = false;
 scene.add(clickMarker);
+
+let pulseTime = 0;
+
+// ── Camera Lerping Target ────────────────────────────────────
+let targetCameraZ = 2.5;
 
 // ── Mouse Interaction ────────────────────────────────────────
 canvas.style.cursor = 'grab';
@@ -130,12 +176,13 @@ canvas.addEventListener('mousemove', e => {
 canvas.addEventListener('mouseup', e => {
     canvas.style.cursor = 'grab';
     if (!isDragging) { handleGlobeClick(e); }
-    setTimeout(() => { autoRotate = true; }, 3000);
+    setTimeout(() => { autoRotate = true; }, 5000);
 });
 
 canvas.addEventListener('wheel', e => {
     e.preventDefault();
-    camera.position.z = Math.max(1.3, Math.min(5, camera.position.z + e.deltaY * 0.001));
+    targetCameraZ = Math.max(1.03, Math.min(5, targetCameraZ + e.deltaY * 0.001));
+    autoRotate = false;
 }, { passive: false });
 
 // ── Click → lat/lon ──────────────────────────────────────────
@@ -160,7 +207,25 @@ function handleGlobeClick(event) {
     currentLat = parseFloat(lat.toFixed(4));
     currentLon = parseFloat(lon.toFixed(4));
 
-    clickMarker.position.copy(point.clone().normalize().multiplyScalar(GLOBE_RADIUS * 1.02));
+    // Calculate rotation to center the clicked point
+    const targetRotX = lat * (Math.PI / 180);
+    const targetRotY = -lon * (Math.PI / 180);
+    
+    // Set rotation velocities for smooth pan to target
+    rotationVelocity.x = (targetRotX - globe.rotation.x) * 0.05;
+    
+    // Ensure shortest path for Y rotation
+    let dy = targetRotY - globe.rotation.y;
+    while(dy > Math.PI) dy -= Math.PI * 2;
+    while(dy < -Math.PI) dy += Math.PI * 2;
+    rotationVelocity.y = dy * 0.05;
+
+    // Zoom in
+    targetCameraZ = 1.25;
+
+    // Place marker
+    clickMarker.position.copy(point.clone().normalize().multiplyScalar(GLOBE_RADIUS * 1.01));
+    clickMarker.lookAt(point.clone().multiplyScalar(2)); // make ring face outward
     clickMarker.visible = true;
 
     document.getElementById('coord-display').textContent = formatCoords(currentLat, currentLon);
@@ -413,7 +478,30 @@ const clock = new THREE.Clock();
 
 function animate() {
     requestAnimationFrame(animate);
-    clock.getDelta(); // keep clock ticking
+    const delta = clock.getDelta(); // keep clock ticking
+
+    // Camera Zoom Lerp
+    camera.position.z += (targetCameraZ - camera.position.z) * 0.1;
+
+    // Cloud rotation (independent)
+    clouds.rotation.y += 0.0003;
+
+    // Twinkling stars
+    const positions = starsGeo.attributes.position.array;
+    for (let i = 0; i < positions.length; i += 3) {
+        if (Math.random() > 0.99) {
+            positions[i + 1] += (Math.random() - 0.5) * 0.5; // subtle movement
+        }
+    }
+    starsGeo.attributes.position.needsUpdate = true;
+
+    // Pulse animation
+    if (clickMarker.visible) {
+        pulseTime += delta * 3;
+        const scale = 1 + Math.sin(pulseTime) * 0.5;
+        pulseRing.scale.set(scale, scale, scale);
+        pulseRing.material.opacity = 0.8 - (scale - 0.5) * 0.5;
+    }
 
     if (autoRotate) {
         globe.rotation.y      += 0.0008;
@@ -426,7 +514,7 @@ function animate() {
         atmosphere.rotation.copy(globe.rotation);
     }
 
-    renderer.render(scene, camera);
+    composer.render(); // Use composer for bloom instead of renderer.render()
 }
 
 // ── Resize Handler ───────────────────────────────────────────

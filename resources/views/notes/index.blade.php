@@ -1,6 +1,11 @@
 @extends('layouts.app')
 @section('content')
 <div class="space-y-4">
+    @if (session('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <span class="block sm:inline">{{ session('error') }}</span>
+        </div>
+    @endif
     <h2 class="text-3xl font-bold dark:text-white">
         Notes
     </h2>
@@ -35,6 +40,9 @@
             <input type="file" name="file" id="file" accept=".txt,.md,.pdf" class="flex w-full h-[100px] justify-center rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 text-slate-900 dark:text-white cursor-pointer">
             <p class="text-xs text-slate-500 mt-1 dark:text-slate-400">Upload file .txt, .md, atau .pdf
             </p>
+            @error('file')
+                <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
+            @enderror
             <div class="flex justify-end mt-4">
                 <x-button type="submit" class="font-bold w-full">Kirim</x-button>
             </div>

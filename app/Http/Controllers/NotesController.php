@@ -154,7 +154,7 @@ class NotesController extends Controller
     public function upload(Request $request): RedirectResponse
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:txt,md,pdf', 'max:102400'],
+            'file' => ['required', 'file', 'extensions:txt,md,pdf', 'max:102400'],
         ]);
 
         /** @var User $user */

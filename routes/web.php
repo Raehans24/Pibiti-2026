@@ -8,8 +8,8 @@ use App\Http\Controllers\WorldController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route('dashboard');
-});
+    return view('welcome');
+})->name('home');
 
 Route::controller(AuthController::class)->group(function () {
     Route::get('/login', 'showLogin')->name('login');

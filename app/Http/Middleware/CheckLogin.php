@@ -15,9 +15,10 @@ class CheckLogin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if(!session('is_login')){
+        if (! session('is_login')) {
             return redirect('login');
         }
+
         return $next($request);
     }
 }

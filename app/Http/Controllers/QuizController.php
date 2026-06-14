@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Ai\Agents\QuizAgent;
 use App\Models\User;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -42,8 +43,8 @@ class QuizController extends Controller
             $note->summary ?: $note->content
         );
 
-        $data = is_string($quizData) ? json_decode($quizData, true) : 
-                ($quizData instanceof \Illuminate\Contracts\Support\Arrayable ? $quizData->toArray() : (array) $quizData);
+        $data = is_string($quizData) ? json_decode($quizData, true) :
+                ($quizData instanceof Arrayable ? $quizData->toArray() : (array) $quizData);
 
         $user->quizzes()->create([
             'note_id' => $note->id,

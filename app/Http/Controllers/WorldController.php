@@ -54,7 +54,7 @@ class WorldController extends Controller
     }
 
     /**
-     * Fetch commodity/economic data. 
+     * Fetch commodity/economic data.
      * WorldBank API is often too slow/complex for direct synchronous requests in loop,
      * so we use a curated fast-response fallback that updates based on simulated daily variance.
      */
@@ -63,18 +63,19 @@ class WorldController extends Controller
         // Simulated real-time variance (+/- 2%)
         $variance = function ($price) {
             $change = (rand(-200, 200) / 100);
+
             return round($price + ($price * ($change / 100)), 2);
         };
 
         $commodityData = [
-            ['name' => 'Minyak Brent', 'symbol' => 'BRENT', 'price' => $variance(82.45), 'change' => rand(-20, 20)/10, 'unit' => 'USD/barrel'],
-            ['name' => 'Gas Alam', 'symbol' => 'NGAS', 'price' => $variance(2.89), 'change' => rand(-5, 5)/10, 'unit' => 'USD/MMBtu'],
-            ['name' => 'Emas', 'symbol' => 'GOLD', 'price' => $variance(2348.30), 'change' => rand(-15, 15)/10, 'unit' => 'USD/troy oz'],
-            ['name' => 'Gandum', 'symbol' => 'WHEAT', 'price' => $variance(548.75), 'change' => rand(-10, 10)/10, 'unit' => 'USD/bushel'],
-            ['name' => 'Batubara', 'symbol' => 'COAL', 'price' => $variance(128.50), 'change' => rand(-8, 8)/10, 'unit' => 'USD/tonne'],
-            ['name' => 'Kakao', 'symbol' => 'COCOA', 'price' => $variance(7850.00), 'change' => rand(-30, 30)/10, 'unit' => 'USD/tonne'],
-            ['name' => 'Kopi Arabika', 'symbol' => 'COFFEE', 'price' => $variance(185.50), 'change' => rand(-10, 10)/10, 'unit' => 'USD/lb'],
-            ['name' => 'Tembaga', 'symbol' => 'COPPER', 'price' => $variance(4.62), 'change' => rand(-5, 5)/10, 'unit' => 'USD/lb'],
+            ['name' => 'Minyak Brent', 'symbol' => 'BRENT', 'price' => $variance(82.45), 'change' => rand(-20, 20) / 10, 'unit' => 'USD/barrel'],
+            ['name' => 'Gas Alam', 'symbol' => 'NGAS', 'price' => $variance(2.89), 'change' => rand(-5, 5) / 10, 'unit' => 'USD/MMBtu'],
+            ['name' => 'Emas', 'symbol' => 'GOLD', 'price' => $variance(2348.30), 'change' => rand(-15, 15) / 10, 'unit' => 'USD/troy oz'],
+            ['name' => 'Gandum', 'symbol' => 'WHEAT', 'price' => $variance(548.75), 'change' => rand(-10, 10) / 10, 'unit' => 'USD/bushel'],
+            ['name' => 'Batubara', 'symbol' => 'COAL', 'price' => $variance(128.50), 'change' => rand(-8, 8) / 10, 'unit' => 'USD/tonne'],
+            ['name' => 'Kakao', 'symbol' => 'COCOA', 'price' => $variance(7850.00), 'change' => rand(-30, 30) / 10, 'unit' => 'USD/tonne'],
+            ['name' => 'Kopi Arabika', 'symbol' => 'COFFEE', 'price' => $variance(185.50), 'change' => rand(-10, 10) / 10, 'unit' => 'USD/lb'],
+            ['name' => 'Tembaga', 'symbol' => 'COPPER', 'price' => $variance(4.62), 'change' => rand(-5, 5) / 10, 'unit' => 'USD/lb'],
         ];
 
         // Determine trend based on change
@@ -109,7 +110,7 @@ class WorldController extends Controller
             'events' => [
                 ['title' => 'Wildfire Simulation', 'categories' => [['id' => 'wildfires']], 'geometry' => [['coordinates' => [100.5, -0.5]]]],
                 ['title' => 'Volcano Simulation', 'categories' => [['id' => 'volcanoes']], 'geometry' => [['coordinates' => [110.4, -7.5]]]],
-            ]
+            ],
         ]);
     }
 }

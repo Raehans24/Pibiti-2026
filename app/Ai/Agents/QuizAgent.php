@@ -57,16 +57,16 @@ class QuizAgent implements Agent, Conversational, HasStructuredOutput, HasTools
         return [
             'question' => $schema->array()->items(
                 $schema->object(
-                    fn($schema)=>[
+                    fn ($schema) => [
                         'question' => $schema->string()->required(),
                         'option_a' => $schema->string()->required(),
                         'option_b' => $schema->string()->required(),
                         'option_c' => $schema->string()->required(),
                         'option_d' => $schema->string()->required(),
-                        'answer' => $schema->string()->enum(['A','B','C','D'])->required(),
+                        'answer' => $schema->string()->enum(['A', 'B', 'C', 'D'])->required(),
                     ]
                 )
-            )->required()
+            )->required(),
         ];
     }
 }

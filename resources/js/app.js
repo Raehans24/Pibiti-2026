@@ -1,12 +1,33 @@
-// === Menu Toggle (Sidebar Mobile) ===
+// === Sidebar Mobile Overlay ===
 const menuButton = document.getElementById('menuButton');
-const aside = document.getElementById('aside');
+const sidebar = document.getElementById('main-sidebar');
+const backdrop = document.getElementById('sidebar-backdrop');
 
-if(menuButton && aside){
-    menuButton.addEventListener('click',()=> {
-        aside.toggleAttribute('hidden');
-    });
+function openSidebar() {
+    if (sidebar) sidebar.classList.remove('-translate-x-full');
+    if (backdrop) backdrop.classList.add('visible');
+    document.body.style.overflow = 'hidden';
 }
+
+function closeSidebar() {
+    if (sidebar) sidebar.classList.add('-translate-x-full');
+    if (backdrop) backdrop.classList.remove('visible');
+    document.body.style.overflow = '';
+}
+
+if (menuButton) {
+    menuButton.addEventListener('click', openSidebar);
+}
+
+if (backdrop) {
+    backdrop.addEventListener('click', closeSidebar);
+}
+
+// Close sidebar on escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSidebar();
+});
+
 
 // === Dark Mode Toggle dengan State Persistence ===
 const darkModeToggle = document.getElementById('darkModeToggle');
